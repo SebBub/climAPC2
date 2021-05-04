@@ -1,3 +1,5 @@
+#TODO filter for North America extent
+
 #%%
 import xarray as xr
 import matplotlib.pyplot as plt
@@ -75,14 +77,14 @@ airtemp_da_rm_climM = airtemp_da_rm.groupby('time.month').mean()
 # monthly anomaly:
 airtemp_da_rm_anomM = airtemp_da_rm.groupby('time.month') - airtemp_da_rm_climM #TODO not entirely sure this is the correct way.. needs some plausibility check of the results
 
-#TODO range of mean seasonal cycle? How to define seasons?
-# check this tutorial: http://xarray.pydata.org/en/stable/examples/monthly-means.html
-
 # Plot the mean temperature (precipitation), averaged over all longitudes, as a function of latitude.
 airtemp_da_rm_lat = airtemp_da_rm.mean(dim='lon').mean(dim='time')
 
 fig2, ax2 = plt.subplots()
 airtemp_da_rm_lat.plot(ax=ax2, label='Time and zonal mean temperature')
+airtemp_da_rm.max(dim='time').mean(dim='lon').plot(ax=ax2, label='Maximum values')
+airtemp_da_rm.min(dim='time').mean(dim='lon').plot(ax=ax2, label='Minimum values')
+
 ax2.set(xlabel='Latitude in degrees North', ylabel='Air temperature in °C', title='Zonal and time mean temperature as a function of latitude')
 ax2.grid()
 ax2.legend(loc='lower right')
@@ -90,10 +92,11 @@ fig2.show()
 fig2.savefig('mean_t_lat.png', dpi=500)
 
 # Do the same for the range of the monthly climatologies.
-airtemp_da_rm_ClimRange = (airtemp_da_rm.max('time') - airtemp_da_rm.min('time')).mean(dim='lon') #TODO this is the absolute maximum range, should we do mean annual ranges instead?
+airtemp_da_rm_ClimRange = (airtemp_da_rm_climM.max('month') - airtemp_da_rm_climM.min('month')).mean(dim='lon')
 
 fig3, ax3 = plt.subplots()
 airtemp_da_rm_ClimRange.plot(ax=ax3, label='Zonal mean of range ')
+# airtemp_da_rm_lat.plot(ax=ax3, label='Time and zonal mean temperature')
 ax3.set(xlabel='Latitude in degrees North', ylabel='Air temperature in °C', title='Absolute maximum range of zonal averaged temperature ranges')
 ax3.grid()
 ax3.legend(loc='lower right')
@@ -101,8 +104,17 @@ fig3.show()
 fig3.savefig('mean_range_lat.png', dpi=500)
 
 # Now, subtract the latitudinal means and create a map plot of the result. Can you explain the results?
-#TODO: discuss
-# If you are unsure, 'example_2.m' will guide you through the individual steps.
+fig4, ax4 = plt.subplots(subplot_kw = {'projection':ccrs.PlateCarree()})
+
+#TODO wie kann man nun bei dem Term der abgezogen wird das wieder um eine longitude erweitern?! Damit wir es
+# von unserer 2D Karte abziehen können...? Wir erwarten z.B. dass die Kontinente wärmer sind als die Ozeane...
+(airtemp_da_rm.mean(dim='time') - airtemp_da_rm.mean(dim='time').mean(dim='lon')).plot(ax=ax4)
+ax4.coastlines()
+gl = ax4.gridlines(crs=ccrs.PlateCarree(), draw_labels=True, linewidth=1, color='gray', alpha=0.7, linestyle='--')
+gl.top_labels = False
+gl.right_labels = False
+fig4.show()
+
 
 #%% Part 3
 # Pick a location near Kiel. Alternatively, you can use a 2x2 box around Kiel and compute the average or use the MATLAB
@@ -110,16 +122,16 @@ fig3.savefig('mean_range_lat.png', dpi=500)
 # generally, interpolation in lat-lon coordinates should be weighted to take their true distances into account.
 
 # we start by visualising the grid of the .nc file to better understand what interpolation/regridding is necessary, if any
-fig4, ax4 = plt.subplots(subplot_kw={'projection' : ccrs.PlateCarree()})
-gl = ax4.gridlines(crs=ccrs.PlateCarree(), draw_labels=True, linewidth=1, color='k', alpha=1, linestyle='--')
+fig5, ax5 = plt.subplots(subplot_kw={'projection' : ccrs.PlateCarree()})
+gl = ax5.gridlines(crs=ccrs.PlateCarree(), draw_labels=True, linewidth=1, color='k', alpha=1, linestyle='--')
 gl.xlocator = mticker.FixedLocator(np.round(airtemp_da_rm.lon.values, 2))
 gl.ylocator = mticker.FixedLocator(np.round(airtemp_da_rm.lat.values, 2))
-ax4.coastlines(resolution='10m')
-ax4.scatter(10.1228, 54.3233, s=50, marker='x', color='r')
-ax4.set(ylabel='Latitude in deg North', xlabel='Longitude in deg East', title='Grid of source file')
-ax4.set_extent([5,15,52,57])
-ax4.annotate('Kiel', (.53,.44), xycoords='axes fraction', weight='bold', c='r')
-fig4.show()
+ax5.coastlines(resolution='10m')
+ax5.scatter(10.1228, 54.3233, s=50, marker='x', color='r')
+ax5.set(ylabel='Latitude in deg North', xlabel='Longitude in deg East', title='Grid of source file')
+ax5.set_extent([5,15,52,57])
+ax5.annotate('Kiel', (.53,.44), xycoords='axes fraction', weight='bold', c='r')
+fig5.show()
 
 # for simplification we chose the gridpoint at 55°N 10°E, no regridding or interpolation, can be added later
 # Plot the temporal evolution of the temperature (precipitation) for this location or box, with the seasonal cycle subtracted
@@ -152,7 +164,8 @@ fig5.show()
 # Create a map of the trends using the function 'sigtrendmap.m'. Was there a significant trend anywhere else?
 # If you are in the precipitation group, please use precipitable water. Feel free to follow 'example_3.m' to complete this task.
 
+#TODO
+# http://atedstone.github.io/rate-of-change-maps/
 
 # Voluntary: Create maps of the trends for only winter or only summer or investigate trends
 # for a specific region as a function of month.
-

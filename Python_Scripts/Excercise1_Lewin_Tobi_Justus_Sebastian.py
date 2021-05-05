@@ -1,5 +1,4 @@
 #TODO filter for North America extent
-# Hallo Tobi
 
 #%%
 import xarray as xr
@@ -162,11 +161,38 @@ Kiel_anom['air'].plot(ax=ax5)
 ax5.set(xlabel='Time', ylabel='Temperature anomaly', title='Kiel monthly temperature anomaly')
 fig5.show()
 
+#%%
 # Create a map of the trends using the function 'sigtrendmap.m'. Was there a significant trend anywhere else?
 # If you are in the precipitation group, please use precipitable water. Feel free to follow 'example_3.m' to complete this task.
 
-#TODO
 # http://atedstone.github.io/rate-of-change-maps/
+
+vals = airtemp_da_rm.dropna(dim='time').values #here we also delete any timestep with NaNs included in the array because
+# polyfit cannot handle NaNs
+months = range(0, len(airtemp_da_rm.dropna(dim='time').time.values)) #because the months are stored as numpy datetime we need some ascending list of integers
+# as our "x-coordinate" for performing a linear regression over time
+vals2 = vals.reshape(len(months), -1)
+regressions = np.polyfit(months, vals2, 1)
+trends_month = regressions[0,:].reshape(vals.shape[1], vals.shape[2])
+trends_year = trends_month * 12
+
+# now rebuild an Xarray dataarray with the numpy array that contains the trends
+trends_array = xr.DataArray(data=trends_year,
+                            coords=[('lat',airtemp_da_rm.lat.values), ('lon',airtemp_da_rm.lon.values)],
+                            name='Trends in air temperature',
+                            attrs=dict(
+                                description="Linear air temperature trends",
+                                units="degC / year"
+                            ))
+
+fig6, ax6 = plt.subplots(subplot_kw={'projection' : ccrs.PlateCarree()})
+ax6.coastlines()
+trends_array.plot(ax=ax6)
+gl = ax6.gridlines(crs=ccrs.PlateCarree(), draw_labels=True, linewidth=1, color='k', alpha=1, linestyle='--')
+gl.right_labels  = gl.top_labels = False
+ax6.set(title=trends_array.name)
+fig6.show()
+
 
 # Voluntary: Create maps of the trends for only winter or only summer or investigate trends
 # for a specific region as a function of month.

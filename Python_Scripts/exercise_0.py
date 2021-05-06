@@ -21,6 +21,8 @@ data_folder = Path(os.getcwd()) / 'Data' #this sets the Pathlib path for data_fo
 # path because the location on the computer, disk name, etc. may vary between systems
 file_name='sst.mnmean.nc'
 sst_ds = xr.open_dataset(data_folder / file_name) #open the dataset and load it into a variable, you can combine different
+
+
 # pathlib Path objects using the '/'
 print('here we actually pass:')
 print(data_folder / file_name)
@@ -93,6 +95,7 @@ ax3 = fig3.add_subplot(gs[0:2,:], projection = ccrs.PlateCarree()) # the last is
 
 ax3.coastlines(resolution='auto', color='k')
 ax3.gridlines(color='lightgrey', linestyle='-', draw_labels=True)
+
 
 ax4 = fig3.add_subplot(gs[2, :])
 

@@ -1,4 +1,5 @@
-#TODO filter for North America extent
+#TODO filter for Europe extent!
+# TODO use mask with regionmask
 
 #%%
 import xarray as xr
@@ -173,6 +174,12 @@ months = range(0, len(airtemp_da_rm.dropna(dim='time').time.values)) #because th
 # as our "x-coordinate" for performing a linear regression over time
 vals2 = vals.reshape(len(months), -1)
 regressions = np.polyfit(months, vals2, 1)
+
+# TODO percentile function in np
+# should accept multidimensional arrays
+# filter out with where()
+# https://numpy.org/doc/stable/reference/generated/numpy.ma.polyfit.html
+
 trends_month = regressions[0,:].reshape(vals.shape[1], vals.shape[2])
 trends_year = trends_month * 12
 
@@ -184,6 +191,8 @@ trends_array = xr.DataArray(data=trends_year,
                                 description="Linear air temperature trends",
                                 units="degC / year"
                             ))
+
+#TODO cut off the top 5% of the trend
 
 fig6, ax6 = plt.subplots(subplot_kw={'projection' : ccrs.PlateCarree()})
 ax6.coastlines()
